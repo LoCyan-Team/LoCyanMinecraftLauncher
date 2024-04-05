@@ -1,2 +1,4 @@
 logs/*
 run.bat
+fabricloader.log
+token.session

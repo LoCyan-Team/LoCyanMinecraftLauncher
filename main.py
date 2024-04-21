@@ -1,14 +1,12 @@
-import os
 import json
 import zipfile
 import uuid
-import platform
 from download import *
 from MicAuth import *
 from java import *
 
 print("欢迎使用 LoCyanFrp 联机大厅配套联机软件")
-mcDir = input("请输入MC游戏文件夹(回车默认程序所在目录, 例如 E:\\MC\\.minecraft 结尾不带 \\): ")
+mcDir = input("请输入MC游戏文件夹(回车默认为官方启动器安装文件夹, 例如 E:\\MC\\.minecraft 结尾不带 \\): ")
 versionList = []
 notFoundFiles = {}
 downloadFlag = False
@@ -16,7 +14,10 @@ maxMem = "2048m"
 
 # 游戏目录
 if mcDir == "":
-    mcDir = os.getcwd() + "/.minecraft"
+    if platform.system().lower() == "Windows":
+        mcDir = os.getcwd() + "%appdata%\\.minecraft"
+    elif platform.system().lower() != "Linux":
+        mcDir = os.getcwd() + "~/.minecraft"
 
 # 游戏版本
 for root, dirs, files in os.walk(mcDir + "/versions/"):
@@ -27,7 +28,6 @@ for i in versionList[0]:
     a += 1
 choose = int(input("请选择你要启动的游戏版本: "))
 version = versionList[0][choose - 1]
-
 
 javaList = find_java_executable()
 if len(javaList) == 0:
@@ -44,7 +44,7 @@ else:
 
 userType = input("请选择用户类型(1: 微软登录, 2: 离线登录): ")
 if userType == "1":
-    userInfo = getCode()
+    userInfo = get_code()
     username = userInfo["username"]
     userUuid = userInfo["uuid"]
 else:
@@ -52,19 +52,19 @@ else:
     userUuid = uuid.uuid4()
 
 
-def unpress(fileName, unPressPath, downloadUrl):
+def unpress(file_name, un_press_path, download_url):
     global downloadFlag
     zip = None
     try:
-        zip = zipfile.ZipFile(fileName)
+        zip = zipfile.ZipFile(file_name)
     except FileNotFoundError:
         downloadFlag = True
-        notFoundFiles[fileName] = downloadUrl
-    if downloadFlag == False:
+        notFoundFiles[file_name] = download_url
+    if not downloadFlag:
         for z in zip.namelist():
-            if os.path.exists(unPressPath) == False:
-                os.mkdir(unPressPath)
-            zip.extract(z, unPressPath)
+            if not os.path.exists(un_press_path):
+                os.mkdir(un_press_path)
+            zip.extract(z, un_press_path)
         zip.close()
 
 
@@ -80,7 +80,7 @@ def get_os_type():
         return None
 
 
-def findVersion(mcDir: str, version: str) -> bool:
+def find_version(mcDir: str, version: str) -> bool:
     return os.path.exists(f"{mcDir}/versions/{version}/{version}.json")
 
 
@@ -90,22 +90,22 @@ def getPath(s: str) -> str:
     version = s[-1]
     fileName = s[1]
     path = (
-        s[0].replace(".", "/")
-        + "/"
-        + fileName
-        + "/"
-        + version
-        + "/"
-        + fileName
-        + "-"
-        + version
-        + ".jar"
+            s[0].replace(".", "/")
+            + "/"
+            + fileName
+            + "/"
+            + version
+            + "/"
+            + fileName
+            + "-"
+            + version
+            + ".jar"
     )
     return path
 
 
 def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
-    if findVersion(mcDir, version) != True:
+    if find_version(mcDir, version) != True:
         print(mcDir)
         print(version)
 
@@ -137,29 +137,17 @@ def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
                         if m == "natives-" + get_os_type():
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(
-                                filePath,
-                                filePath.replace(".jar", ""),
-                                i["downloads"][native][m]["url"],
-                            )
+                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
                             continue
                         if m == "javadoc":
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(
-                                filePath,
-                                filePath.replace(".jar", ""),
-                                i["downloads"][native][m]["url"],
-                            )
+                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
                             continue
                         if m == "sources":
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(
-                                filePath,
-                                filePath.replace(".jar", ""),
-                                i["downloads"][native][m]["url"],
-                            )
+                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
                             continue
 
     if downloadFlag:
@@ -231,7 +219,8 @@ def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
         mc_args = mc_args.replace("${resolution_height}", "960")
         mc_args = mc_args.replace("${resolution_width}", "1024")
         mc_args = mc_args.replace(
-            "--quickPlayPath ${quickPlayPath} --quickPlaySingleplayer ${quickPlaySingleplayer} --quickPlayMultiplayer ${quickPlayMultiplayer} --quickPlayRealms ${quickPlayRealms}",
+            "--quickPlayPath ${quickPlayPath} --quickPlaySingleplayer ${quickPlaySingleplayer} --quickPlayMultiplayer "
+            "${quickPlayMultiplayer} --quickPlayRealms ${quickPlayRealms}",
             "",
         )
         # 去除 demo 版

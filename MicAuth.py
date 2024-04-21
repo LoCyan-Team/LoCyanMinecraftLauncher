@@ -1,23 +1,23 @@
 from requests import get
 from requests import post
-from json import loads
-from json import dumps
+from json import dumps, loads
 import webbrowser
 
 
-def getCode():
+def get_code():
     webbrowser.open(
-        "https://login.live.com/oauth20_authorize.srf?client_id=00000000402b5328&response_type=code&scope=service%3A%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf"
+        "https://login.live.com/oauth20_authorize.srf?client_id=00000000402b5328&response_type=code&scope=service%3A"
+        "%3Auser.auth.xboxlive.com%3A%3AMBI_SSL&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf"
     )
     print(
         """请访问打开的页面获取登录令牌, 并在该页面内复制重定向后的URL,格式类似于 https://login.live.com/oauth20_desktop.srf?code=codegoeshere&lc=1033
 """
     )
 
-    codeUrl = input("输入URL: ")
-    begin = codeUrl.find("code") + 5
-    end = codeUrl.find("&lc")
-    code = codeUrl[begin:end]
+    code_url = input("输入URL: ")
+    begin = code_url.find("code") + 5
+    end = code_url.find("&lc")
+    code = code_url[begin:end]
     data = {
         "client_id": "00000000402b5328",
         "code": code,
@@ -30,16 +30,16 @@ def getCode():
     rs = post(
         "https://login.live.com/oauth20_token.srf", data=data, headers=header
     ).json()
-    accessToken = rs["access_token"]
-    refreshToken = rs["refresh_token"]
+    access_token = rs["access_token"]
+    refresh_token = rs["refresh_token"]
     with open("./token.session", "w+") as f:
-        f.write(refreshToken)
+        f.write(refresh_token)
 
     data = {
         "Properties": {
             "AuthMethod": "RPS",
             "SiteName": "user.auth.xboxlive.com",
-            "RpsTicket": f"{accessToken}",
+            "RpsTicket": f"{access_token}",
         },
         "RelyingParty": "http://auth.xboxlive.com",
         "TokenType": "JWT",
@@ -77,10 +77,10 @@ def getCode():
         "https://api.minecraftservices.com/authentication/login_with_xbox",
         data=dumps(data),
     ).json()
-    mcAccessToken = rs["access_token"]
+    mc_access_token = rs["access_token"]
 
     # 检测该用户是否拥有 Java 版游戏
-    header = {"Authorization": f"Bearer {mcAccessToken}"}
+    header = {"Authorization": f"Bearer {mc_access_token}"}
     rs = get("https://api.minecraftservices.com/entitlements/mcstore", headers=header)
     if rs.text == "":
         print("你还没购买 Minecraft!")
@@ -91,5 +91,5 @@ def getCode():
     ).json()
     uuid = rs["id"]
     name = rs["name"]
-    rs_val = {"uuid": uuid, "username": name, "access_token": mcAccessToken}
+    rs_val = {"uuid": uuid, "username": name, "access_token": mc_access_token}
     return rs_val

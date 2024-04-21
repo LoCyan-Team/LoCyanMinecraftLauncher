@@ -1,5 +1,6 @@
 import os
 
+
 def find_java_executable():
     list = []
     # 指定要搜索的路径

@@ -52,7 +52,7 @@ else:
     userUuid = uuid.uuid4()
 
 
-def unpress(fileName, unPressPath,downloadUrl):
+def unpress(fileName, unPressPath, downloadUrl):
     global downloadFlag
     zip = None
     try:
@@ -66,43 +66,58 @@ def unpress(fileName, unPressPath,downloadUrl):
                 os.mkdir(unPressPath)
             zip.extract(z, unPressPath)
         zip.close()
-        
+
+
 def get_os_type():
     system_type = platform.system()
-    if system_type == 'Windows':
-        return 'windows'
-    elif system_type == 'Darwin':
-        return 'osx'
-    elif system_type == 'Linux':
-        return 'linux'
+    if system_type == "Windows":
+        return "windows"
+    elif system_type == "Darwin":
+        return "osx"
+    elif system_type == "Linux":
+        return "linux"
     else:
         return None
 
+
 def findVersion(mcDir: str, version: str) -> bool:
     return os.path.exists(f"{mcDir}/versions/{version}/{version}.json")
+
 
 def getPath(s: str) -> str:
     # org.ow2.asm:asm-analysis:9.6
     s = s.split(":")
     version = s[-1]
     fileName = s[1]
-    path = s[0].replace(".", "/") + "/" + fileName + "/" + version + "/" + fileName + "-" + version + ".jar"
+    path = (
+        s[0].replace(".", "/")
+        + "/"
+        + fileName
+        + "/"
+        + version
+        + "/"
+        + fileName
+        + "-"
+        + version
+        + ".jar"
+    )
     return path
+
 
 def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
     if findVersion(mcDir, version) != True:
         print(mcDir)
         print(version)
-    
+
     dic = {}
     with open(f"{mcDir}/versions/{version}/{version}.json", "r") as f:
         dic = json.loads(f.read())
-    
+
     if len(dic) == 0:
         print("解析 JSON 失败")
         exit()
     nativePath = f"{mcDir}/versions/{version}/{version}-natives"
-    
+
     # 解压支持库至指定位置
     for i in dic["libraries"]:
         if i.get("downloads") == None:
@@ -122,28 +137,40 @@ def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
                         if m == "natives-" + get_os_type():
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
+                            unpress(
+                                filePath,
+                                filePath.replace(".jar", ""),
+                                i["downloads"][native][m]["url"],
+                            )
                             continue
                         if m == "javadoc":
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
+                            unpress(
+                                filePath,
+                                filePath.replace(".jar", ""),
+                                i["downloads"][native][m]["url"],
+                            )
                             continue
                         if m == "sources":
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
+                            unpress(
+                                filePath,
+                                filePath.replace(".jar", ""),
+                                i["downloads"][native][m]["url"],
+                            )
                             continue
-    
+
     if downloadFlag:
         for i in notFoundFiles.keys():
             download_file(notFoundFiles[i], i)
         print("游戏资源下载完成，请尝试重启本软件")
         exit()
-    
-    jvmArgs = f"\"{javaPath}\" -XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path={nativePath} -Djna.tmpdir={nativePath} -Dorg.lwjgl.system.SharedLibraryExtractPath={nativePath} -Dio.netty.native.workdir={nativePath} -Dminecraft.launcher.brand=LoCyanLauncher -Dminecraft.launcher.version=1.0.0 -cp"
+
+    jvmArgs = f'"{javaPath}" -XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -Dfml.ignoreInvalidMinecraftCertificates=True -Dfml.ignorePatchDiscrepancies=True -Dlog4j2.formatMsgNoLookups=true -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Djava.library.path={nativePath} -Djna.tmpdir={nativePath} -Dorg.lwjgl.system.SharedLibraryExtractPath={nativePath} -Dio.netty.native.workdir={nativePath} -Dminecraft.launcher.brand=LoCyanLauncher -Dminecraft.launcher.version=1.0.0 -cp'
     classPath = ""
-    classPath += "\""
+    classPath += '"'
     for i in dic["libraries"]:
         if i.get("downloads") == None or i.get("downloads") == {}:
             path = mcDir + "/libraries/" + getPath(i["name"])
@@ -153,12 +180,12 @@ def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
             path = i["downloads"]["artifact"]["path"]
             normal = f"{mcDir}/libraries/{path}"
             classPath += normal + ";"
-    classPath += f"{mcDir}/versions/{version}/{version}.jar\""
+    classPath += f'{mcDir}/versions/{version}/{version}.jar"'
     # 参数拼接
     jvmArgs += " " + classPath + " -Xmx" + maxMem + " -Xmn256m"
     mc_args = ""
     mc_args += dic["mainClass"] + " "
-    
+
     # 适配旧版本
     if dic.get("minecraftArguments") == "" or dic.get("minecraftArguments") == None:
         # 高版本
@@ -183,8 +210,10 @@ def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
                 else:
                     mc_args += i["value"] + " "
     mc_args = mc_args.replace("${version_name}", version)
-    mc_args = mc_args.replace("${game_directory}", "\"" + mcDir + "/versions/" + version + "\"")
-    mc_args = mc_args.replace("${assets_root}", "\"" + mcDir + "/assets" + "\"")
+    mc_args = mc_args.replace(
+        "${game_directory}", '"' + mcDir + "/versions/" + version + '"'
+    )
+    mc_args = mc_args.replace("${assets_root}", '"' + mcDir + "/assets" + '"')
     mc_args = mc_args.replace("${assets_index_name}", dic["assetIndex"]["id"])
     mc_args = mc_args.replace("${auth_player_name}", username)
     mc_args = mc_args.replace("${auth_uuid}", str(userUuid))
@@ -201,7 +230,10 @@ def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
         mc_args = mc_args.replace("${version_type}", dic["type"])
         mc_args = mc_args.replace("${resolution_height}", "960")
         mc_args = mc_args.replace("${resolution_width}", "1024")
-        mc_args = mc_args.replace("--quickPlayPath ${quickPlayPath} --quickPlaySingleplayer ${quickPlaySingleplayer} --quickPlayMultiplayer ${quickPlayMultiplayer} --quickPlayRealms ${quickPlayRealms}", "")
+        mc_args = mc_args.replace(
+            "--quickPlayPath ${quickPlayPath} --quickPlaySingleplayer ${quickPlaySingleplayer} --quickPlayMultiplayer ${quickPlayMultiplayer} --quickPlayRealms ${quickPlayRealms}",
+            "",
+        )
         # 去除 demo 版
         mc_args = mc_args.replace("--demo", "")
     commandLine = jvmArgs + " " + mc_args

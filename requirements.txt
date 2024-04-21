@@ -1,2 +1,4 @@
 tqdm
 requests
+nuitka>=1.8
+lib-not-dr[nuitka]>=0.3.10

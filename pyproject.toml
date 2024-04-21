@@ -1,0 +1,7 @@
+[tool.lndl.nuitka.cli]
+main = "main.py"
+standalone = true
+onefile = true
+
+clang = true
+msvc = "latest"

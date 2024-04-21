@@ -2,3 +2,4 @@ logs/*
 run.bat
 fabricloader.log
 token.session
+.pdm-python

@@ -1,4 +1,4 @@
-tqdm
-requests
+tqdm>=4.61.0
+requests>=2.25.1
 nuitka>=1.8
 lib-not-dr[nuitka]>=0.3.10

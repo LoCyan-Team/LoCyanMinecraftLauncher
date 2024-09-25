@@ -6,7 +6,9 @@ from MicAuth import *
 from java import *
 
 print("欢迎使用 LoCyanFrp 联机大厅配套联机软件")
-mcDir = input("请输入MC游戏文件夹(回车默认为官方启动器安装文件夹, 例如 E:\\MC\\.minecraft 结尾不带 \\): ")
+mcDir = input(
+    "请输入MC游戏文件夹(回车默认为官方启动器安装文件夹, 例如 E:\\MC\\.minecraft 结尾不带 \\): "
+)
 versionList = []
 notFoundFiles = {}
 downloadFlag = False
@@ -90,16 +92,16 @@ def getPath(s: str) -> str:
     version = s[-1]
     fileName = s[1]
     path = (
-            s[0].replace(".", "/")
-            + "/"
-            + fileName
-            + "/"
-            + version
-            + "/"
-            + fileName
-            + "-"
-            + version
-            + ".jar"
+        s[0].replace(".", "/")
+        + "/"
+        + fileName
+        + "/"
+        + version
+        + "/"
+        + fileName
+        + "-"
+        + version
+        + ".jar"
     )
     return path
 
@@ -137,17 +139,29 @@ def run(javaPath: str, mcDir: str, version: str, username: str) -> None:
                         if m == "natives-" + get_os_type():
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
+                            unpress(
+                                filePath,
+                                filePath.replace(".jar", ""),
+                                i["downloads"][native][m]["url"],
+                            )
                             continue
                         if m == "javadoc":
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
+                            unpress(
+                                filePath,
+                                filePath.replace(".jar", ""),
+                                i["downloads"][native][m]["url"],
+                            )
                             continue
                         if m == "sources":
                             path = i["downloads"][native][m]["path"]
                             filePath = f"{mcDir}/libraries/{path}"
-                            unpress(filePath, filePath.replace(".jar", ""), i["downloads"][native][m]["url"])
+                            unpress(
+                                filePath,
+                                filePath.replace(".jar", ""),
+                                i["downloads"][native][m]["url"],
+                            )
                             continue
 
     if downloadFlag:
